@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "enac-cd-app"
+version = "0.1.0"
+description = "CD app for ENAC-IT"
+authors = ["Samuel Bancal <Samuel.Bancal@epfl.ch>"]
+license = "GPLv3"
+readme = "README.md"
+packages = [{include = "enac_cd_app"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.95.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+flake8 = "^6.0.0"
+pre-commit = "^3.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
