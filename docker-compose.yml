@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  reverse-proxy:
+    image: traefik:v3.0
+    restart: unless-stopped
+    command:
+      - "--providers.docker"
+      - "--providers.file.directory=/configuration/"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entryPoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.yml:/configuration/traefik.yml
+      - ${SSL_CERT_CRT:-./cert/certificate.crt}:/cert/certificate.crt
+      - ${SSL_CERT_KEY:-./cert/certificate.key}:/cert/certificate.key
+
+  enac_cd_app:
+    build: .
+    restart: unless-stopped
+    labels:
+      - "traefik.http.routers.enac_cd_app.tls=true"
+      - "traefik.http.routers.enac_cd_app.rule=PathPrefix(`/`)"
+      - "traefik.http.services.enac_cd_app.loadbalancer.server.port=80"
