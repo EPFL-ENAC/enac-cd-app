@@ -11,6 +11,7 @@ packages = [{include = "enac_cd_app"}]
 python = "^3.10"
 fastapi = "^0.95.0"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
+redis-om = "^0.1.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"

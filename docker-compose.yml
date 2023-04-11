@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.9"
 services:
   reverse-proxy:
     image: traefik:v3.0
@@ -27,3 +27,18 @@ services:
       - "traefik.http.routers.enac_cd_app.tls=true"
       - "traefik.http.routers.enac_cd_app.rule=PathPrefix(`/`)"
       - "traefik.http.services.enac_cd_app.loadbalancer.server.port=80"
+    environment:
+      - REDIS_OM_URL=redis://redis:6379
+
+  redis:
+    image: redis/redis-stack:latest
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    ports:
+      - 6379:6379
+      - 8001:8001
+
+volumes:
+  redis-data:
+    driver: local
