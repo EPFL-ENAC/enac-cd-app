@@ -7,11 +7,7 @@ import datetime
 from redis_om import Migrator
 from redis_om.model.model import NotFoundError
 
-from enac_cd_app.utils.redis_models import (
-    DeployedApp,
-    RunningAppDeployment,
-    RunningStates,
-)
+from .redis_models import DeployedApp, RunningAppDeployment, RunningStates
 
 
 def inject_apps():
