@@ -1,7 +1,8 @@
 import docker
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
 from enac_cd_app import __name__, __version__
+from enac_cd_app.utils.ip import check_ip_is_local
 from enac_cd_app.utils.redis import (
     get_app_inventory,
     inject_apps,
@@ -47,3 +48,8 @@ def app_deploy(name: str, key: str):
         return {"status": "starting", "job_id": job_id, "output": output}
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
+
+@app.get("/protected/", dependencies=[Depends(check_ip_is_local)])
+def protected():
+    return {"answer": "Allowed, your IP is local"}
