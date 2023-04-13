@@ -9,4 +9,4 @@ run:
 	docker compose up -d --remove-orphans
 
 generate-selfsigned-cert:
-	cd cert && OWNER="${UID}.${GID}" docker-compose up --remove-orphans
+	cd cert && OWNER="${UID}.${GID}" docker compose up --remove-orphans
