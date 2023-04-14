@@ -1,3 +1,80 @@
+# ENAC Continuous Deployment Application
+
+To see the mermaid diagrams in VSCode, install [bierner.markdown-mermaid](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
+
+## Workflow for an App Continuous Deployment
+
+```mermaid
+sequenceDiagram
+    participant GHR as Github/Gitlab Runner
+    participant CD as enac-prod-cd-app.epfl.ch
+    box Redis
+    participant R-App as Redis-DeployedApp
+    participant R-Running as Redis-RunningAppDeployment
+    end
+    participant enacit-ansible as enacit-ansible container
+
+    Note over GHR: Phase 1: Request from external Runner
+
+    GHR->>CD: /app-deploy/?name=myapp1&key=secret1
+    CD->>R-App: does that app exist?
+    R-App->>CD: yes, it has inventory="inventory1"
+    CD->>R-Running: is that inventory already being deployed?\nif not set its status to "starting"
+    R-Running->>CD: ok, status is "starting" and job_id is "jobid-123"
+    CD->>enacit-ansible: run app-deploy with inventory="inventory1" and job_id="jobid-123" in a new container
+    CD->>GHR: ok, job_id is "jobid-123", status is "starting"
+
+    Note over enacit-ansible: Phase 2: Processing of the app-deploy
+    enacit-ansible->>CD: set status for job_id="jobid-123" to "running"
+    CD->>R-Running: set status for job_id="jobid-123" to "running"
+    enacit-ansible->>enacit-ansible: do the ansible app deployment
+
+    Note over GHR: Any time the status may be requested
+    GHR->>CD: /job-status/?job_id=jobid-123
+    CD->>R-Running: get status for job_id="jobid-123"
+    R-Running->>CD: status is "running"
+    CD->>GHR: status is "running"
+
+    Note over enacit-ansible: Phase 3: app-deploy is done
+    enacit-ansible->>CD: set status for job_id="jobid-123" to "done"
+    CD->>R-Running: set status for job_id="jobid-123" to "done"
+
+    Note over GHR: Phase 4: Last time the status is requested
+    GHR->>CD: /job-status/?job_id=jobid-123
+    CD->>R-Running: get status for job_id="jobid-123"
+    R-Running->>CD: status is "done"
+    CD->>GHR: status is "done"
+
+```
+
+## Workflow to update Applications list available for CD
+
+```mermaid
+sequenceDiagram
+    participant GHR as Github/Gitlab Runner
+    participant CD as enac-prod-cd-app.epfl.ch
+    box Redis
+    participant R-App as Redis-DeployedApp
+    participant R-Running as Redis-RunningAppDeployment
+    end
+    participant enacit-ansible as enacit-ansible container
+    participant enacit-feed as enacit-ansible feed container
+
+    Note over GHR: Phase 1: Request from external Runner to CD enacit-ansible itself<br/>Everything the same as for App Continuous Deploy
+
+    Note over enacit-ansible: Phase 2: Processing of the app-deploy<br/>Same as for App Continuous Deploy ... but this time it runs on that same server
+
+    enacit-ansible->>enacit-feed: make run
+    enacit-feed->>CD: This is the list of all apps available for CD
+    CD->>R-App: update the list of all apps available for CD
+    R-App->>CD: ok
+    CD->>enacit-feed: ok
+
+    Note over enacit-ansible: Phase 3: app-deploy is done<br/>Same as for App Continuous Deploy
+
+    Note over GHR: Phase 4: Last time the status is requested<br/>Same as for App Continuous Deploy
+```
+
 # WIP - Work in progress
 
 ## Play the app
