@@ -162,3 +162,63 @@ http --verify no "https://localhost/get-available-apps/"
 #     "status": "ok"
 # }
 ```
+
+Testing fake status update: (TODO: remove this fake!)
+
+```bash
+http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=01GYWA8F0GMDM5GGNTVPYSWEYK"
+
+# HTTP/1.1 200 OK
+# Content-Length: 75
+# Content-Type: application/json
+# Date: Tue, 25 Apr 2023 13:44:34 GMT
+# Server: uvicorn
+
+# {
+#     "job_id": "01GYWA8F0GMDM5GGNTVPYSWEYK",
+#     "output": "TODO",
+#     "status": "starting"
+# }
+
+http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=01GYWA8F0GMDM5GGNTVPYSWEYK"
+
+# HTTP/1.1 200 OK
+# Content-Length: 74
+# Content-Type: application/json
+# Date: Tue, 25 Apr 2023 13:44:35 GMT
+# Server: uvicorn
+
+# {
+#     "job_id": "01GYWA8F0GMDM5GGNTVPYSWEYK",
+#     "output": "TODO",
+#     "status": "running"
+# }
+
+http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=01GYWA8F0GMDM5GGNTVPYSWEYK"
+
+# HTTP/1.1 200 OK
+# Content-Length: 75
+# Content-Type: application/json
+# Date: Tue, 25 Apr 2023 13:44:37 GMT
+# Server: uvicorn
+
+# {
+#     "job_id": "01GYWA8F0GMDM5GGNTVPYSWEYK",
+#     "output": "TODO",
+#     "status": "finished"
+# }
+
+http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=01GYWA8F0GMDM5GGNTVPYSWEYK"
+
+# HTTP/1.1 200 OK
+# Content-Length: 75
+# Content-Type: application/json
+# Date: Tue, 25 Apr 2023 13:44:38 GMT
+# Server: uvicorn
+
+# {
+#     "job_id": "01GYWA8F0GMDM5GGNTVPYSWEYK",
+#     "output": "TODO",
+#     "status": "finished"
+# }
+```

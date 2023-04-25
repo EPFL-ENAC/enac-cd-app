@@ -60,6 +60,11 @@ def get_job_status(name: str, key: str, job_id: str):
     try:
         inventory = redis.get_app_inventory(app_name=name, secret_key=key)
         job_status = redis.get_job_status(inventory=inventory, job_id=job_id)
+        # TODO: remove this fake status change
+        if job_status == "starting":
+            redis.set_job_status(inventory=inventory, job_id=job_id, status="running")
+        elif job_status == "running":
+            redis.set_job_status(inventory=inventory, job_id=job_id, status="finished")
         return {
             "status": job_status,
             "job_id": job_id,
