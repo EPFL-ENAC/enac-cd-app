@@ -1,0 +1,12 @@
+[
+  {
+    "app_name": "app-one",
+    "inventory": "app-one.epfl.ch",
+    "secret": "secret123"
+  },
+  {
+    "app_name": "app-two",
+    "inventory": "app-two.epfl.ch",
+    "secret": "secretABC"
+  }
+]

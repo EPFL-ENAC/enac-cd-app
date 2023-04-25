@@ -126,4 +126,39 @@ http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=0
 #     "output": "TODO",
 #     "status": "starting"
 # }
+
+http --verify no POST "https://localhost/set-available-apps/" < sample_inventory.json
+# HTTP/1.1 200 OK
+# Content-Length: 15
+# Content-Type: application/json
+# Date: Tue, 25 Apr 2023 13:16:05 GMT
+# Server: uvicorn
+
+# {
+#     "status": "ok"
+# }
+
+# TODO: removed this debug endpoint
+http --verify no "https://localhost/get-available-apps/"
+# HTTP/1.1 200 OK
+# Content-Length: 177
+# Content-Type: application/json
+# Date: Tue, 25 Apr 2023 13:16:23 GMT
+# Server: uvicorn
+
+# {
+#     "inventory": [
+#         {
+#             "app_name": "app-one",
+#             "inventory": "app-one.epfl.ch",
+#             "secret": "secret123"
+#         },
+#         {
+#             "app_name": "app-two",
+#             "inventory": "app-two.epfl.ch",
+#             "secret": "secretABC"
+#         }
+#     ],
+#     "status": "ok"
+# }
 ```

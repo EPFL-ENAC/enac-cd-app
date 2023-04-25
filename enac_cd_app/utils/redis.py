@@ -3,6 +3,7 @@ This is to define all interactions with redis
 """
 
 import datetime
+from typing import List
 
 from redis_om import Migrator
 from redis_om.model.model import NotFoundError
@@ -31,6 +32,50 @@ def remove_all_running_app_deployments():
     # TODO: remove this
     for pk in RunningAppDeployment.all_pks():
         RunningAppDeployment.delete(pk=pk)
+
+
+def get_available_apps() -> List:
+    # TODO: remove this
+    inventory = []
+    for pk in DeployedApp.all_pks():
+        app = DeployedApp.find(DeployedApp.pk == pk).first()
+        inventory.append(
+            {
+                "app_name": app.app_name,
+                "inventory": app.inventory,
+                "secret": app.secret_key,
+            }
+        )
+    return inventory
+
+
+def set_available_apps(inventory: List):
+    """
+    Example of inventory:
+    inventory = [
+        {
+        "app_name": "app-one",
+        "inventory": "app-one.epfl.ch",
+        "secret": "secret123",
+        },
+        {
+        "app_name": "app-two",
+        "inventory": "app-two.epfl.ch",
+        "secret": "secretABC",
+        }
+    ]
+    """
+    # remove all existing apps
+    for pk in DeployedApp.all_pks():
+        DeployedApp.delete(pk=pk)
+
+    # add new apps
+    for app in inventory:
+        DeployedApp(
+            app_name=app["app_name"],
+            secret_key=app["secret"],
+            inventory=app["inventory"],
+        ).save()
 
 
 def get_app_inventory(app_name: str, secret_key: str) -> str:
