@@ -113,4 +113,17 @@ http --verify no "https://localhost/app-deploy/?name=myapp1&key=secret1"
 #     "error": "App deployment is already running",
 #     "status": "error"
 # }
+
+http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=01GXWVB721DKCAZENADFNKNM4G"
+# HTTP/1.1 200 OK
+# Content-Length: 75
+# Content-Type: application/json
+# Date: Tue, 25 Apr 2023 09:37:08 GMT
+# Server: uvicorn
+
+# {
+#     "job_id": "01GXWVB721DKCAZENADFNKNM4G",
+#     "output": "TODO",
+#     "status": "starting"
+# }
 ```

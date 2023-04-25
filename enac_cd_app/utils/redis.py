@@ -72,6 +72,21 @@ def set_deploy_starting(inventory: str) -> int:
     return starting_deploy.pk
 
 
+def get_job_status(inventory: str, job_id: int) -> str:
+    """
+    Get the status of a job
+    """
+    try:
+        running_deploy = RunningAppDeployment.find(
+            RunningAppDeployment.inventory == inventory
+        ).first()
+    except NotFoundError:
+        raise Exception("App deployment not found")
+    if running_deploy.pk != job_id:
+        raise Exception("App deployment not found")
+    return RunningStates(running_deploy.status).name.lower()
+
+
 # Before running queries, we need to run migrations to set up the
 # indexes that Redis OM will use. You can also use the `migrate`
 # CLI tool for this!

@@ -5,6 +5,7 @@ from enac_cd_app import __name__, __version__
 from enac_cd_app.utils.ip import check_ip_is_local
 from enac_cd_app.utils.redis import (
     get_app_inventory,
+    get_job_status,
     inject_apps,
     remove_all_running_app_deployments,
     set_deploy_starting,
@@ -45,7 +46,29 @@ def app_deploy(name: str, key: str):
         except Exception as e:
             output = f"docker error: {str(e)}"
 
-        return {"status": "starting", "job_id": job_id, "output": output}
+        return {
+            "status": "starting",
+            "job_id": job_id,
+            "output": output,
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+@app.get("/job-status/")
+def job_status(name: str, key: str, job_id: str):
+    """
+    Get the status of a job
+    name and key must match an inventory from the database
+    """
+    try:
+        inventory = get_app_inventory(app_name=name, secret_key=key)
+        job_status = get_job_status(inventory=inventory, job_id=job_id)
+        return {
+            "status": job_status,
+            "job_id": job_id,
+            "output": "TODO",
+        }
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
