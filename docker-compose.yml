@@ -11,6 +11,7 @@ services:
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.web.http.redirections.entryPoint.permanent=true"
       - "--entrypoints.websecure.address=:443"
+      - "--providers.docker.exposedByDefault=false"
     ports:
       - "80:80"
       - "443:443"
@@ -24,6 +25,7 @@ services:
     build: .
     restart: unless-stopped
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.enac_cd_app.tls=true"
       - "traefik.http.routers.enac_cd_app.rule=PathPrefix(`/`)"
       - "traefik.http.services.enac_cd_app.loadbalancer.server.port=80"

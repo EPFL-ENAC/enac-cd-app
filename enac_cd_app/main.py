@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 import docker
 from fastapi import Depends, FastAPI
@@ -75,7 +75,7 @@ def get_job_status(name: str, key: str, job_id: str):
 
 
 @app.post("/set-available-apps/", dependencies=[Depends(check_ip_is_local)])
-def post_set_available_apps(inventory: List):
+def post_set_available_apps(inventory: List[Dict]):
     """
     Set the available apps from inventory to the database
     """

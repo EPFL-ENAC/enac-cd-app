@@ -13,6 +13,8 @@ async def check_ip_is_local(request: Request) -> bool:
     """
     # Get the client's IP address (X-Forwarded-For is set by the reverse proxy)
     client_host = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+    if client_host == "":  # if X-Forwarded-For is not set then use the client's IP
+        client_host = request.client.host
     client_ip = ipaddress.ip_address(client_host)
 
     # get docker's network network details
