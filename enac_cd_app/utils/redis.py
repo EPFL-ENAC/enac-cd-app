@@ -90,11 +90,12 @@ def set_deploy_starting(inventory: str) -> int:
         inventory=inventory,
         status=RunningStates.STARTING,
         started_at=datetime.datetime.now(),
+        output="",
     ).save()
     return starting_deploy.pk
 
 
-def get_job_status(inventory: str, job_id: int) -> str:
+def read_job_status(inventory: str, job_id: int) -> str:
     """
     Get the status of a job
     """
@@ -106,23 +107,40 @@ def get_job_status(inventory: str, job_id: int) -> str:
         raise Exception("App deployment not found")
     if running_deploy.pk != job_id:
         raise Exception("App deployment not found")
-    return RunningStates(running_deploy.status).name.lower()
+    output = running_deploy.output
+    running_deploy.output = ""
+    return {
+        "status": RunningStates(running_deploy.status).name.lower(),
+        "output": output,
+    }
 
 
-def set_job_status(inventory: str, job_id: int, status: str):
+def set_job_status(job_id: int, status: str, output: str):
     """
     Set the status of a job
     """
     try:
         running_deploy = RunningAppDeployment.find(
-            RunningAppDeployment.inventory == inventory
+            RunningAppDeployment.pk == job_id
         ).first()
     except NotFoundError:
         raise Exception("App deployment not found")
     if running_deploy.pk != job_id:
         raise Exception("App deployment not found")
     running_deploy.status = RunningStates[status.upper()]
+    running_deploy.output += output
     running_deploy.save()
+
+
+def inject_fake_deployment():
+    # TODO: remove this
+    starting_deploy = RunningAppDeployment(
+        inventory="bla",
+        status=RunningStates.STARTING,
+        started_at=datetime.datetime.now(),
+        output="",
+    ).save()
+    print(f"created fake deployment with id {starting_deploy.pk}")
 
 
 # Before running queries, we need to run migrations to set up the

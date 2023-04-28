@@ -1,6 +1,7 @@
 import os
 import time
 from multiprocessing import Process
+from operator import itemgetter
 from typing import Dict, List
 
 import docker
@@ -22,6 +23,7 @@ def inject_apps():
     """
     Run enacit-ansible announce-apps in a docker container
     """
+    redis.inject_fake_deployment()  # TODO: remove this
     try:
         client = docker.from_env()
         output = client.containers.run(
@@ -56,6 +58,36 @@ async def get_root():
     return {"app": __name__, "version": __version__}
 
 
+def app_deploy(inventory: str, job_id: int):
+    try:
+        client = docker.from_env()
+        output = client.containers.run(
+            "ghcr.io/epfl-enac/enacit-ansible:latest",
+            f"app-deploy {inventory} {job_id}",
+            volumes={
+                "/opt/enac-cd-app/root/.ssh": {
+                    "bind": "/opt/root/.ssh",
+                    "mode": "ro",
+                },
+                "/opt/enac-cd-app/root/.enacit-ansible_vault_password": {
+                    "bind": "/opt/root/.enacit-ansible_vault_password",
+                    "mode": "rw",
+                },
+            },
+            environment={
+                "CD_ENV": CD_ENV,
+            },
+            network="enac-cd-app_default",
+        )
+        output.decode()
+        print(output, flush=True)
+    except Exception as e:
+        print(
+            f"Error while running enacit-ansible announce-apps: {str(e)}",
+            flush=True,
+        )
+
+
 @app.get("/app-deploy/")
 async def get_app_deploy(name: str, key: str):
     """
@@ -65,21 +97,25 @@ async def get_app_deploy(name: str, key: str):
     try:
         inventory = redis.get_app_inventory(app_name=name, secret_key=key)
         job_id = redis.set_deploy_starting(inventory=inventory)
-        try:
-            client = docker.from_env()
-            # enacit-ansible app-deploy --inventory inventory_123
-            output = client.containers.run("ubuntu", "echo hello world")
-            output.decode()
-        except Exception as e:
-            output = f"docker error: {str(e)}"
+        p = Process(target=app_deploy, args=(inventory, job_id))
+        p.start()
 
         return {
             "status": "starting",
             "job_id": job_id,
-            "output": output,
+            "output": "",
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
+
+@app.post("/set-job-status/", dependencies=[Depends(check_ip_is_local)])
+async def set_job_status(payload: dict):
+    job_id = payload.get("job_id")
+    status = payload.get("status")
+    output = payload.get("output")
+    redis.set_job_status(job_id=job_id, status=status, output=output)
+    return {"status": "saved"}
 
 
 @app.get("/job-status/")
@@ -90,16 +126,15 @@ async def get_job_status(name: str, key: str, job_id: str):
     """
     try:
         inventory = redis.get_app_inventory(app_name=name, secret_key=key)
-        job_status = redis.get_job_status(inventory=inventory, job_id=job_id)
-        # TODO: remove this fake status change
-        if job_status == "starting":
-            redis.set_job_status(inventory=inventory, job_id=job_id, status="running")
-        elif job_status == "running":
-            redis.set_job_status(inventory=inventory, job_id=job_id, status="finished")
+        status, output = itemgetter(
+            "status",
+            "output",
+            redis.read_job_status(inventory=inventory, job_id=job_id),
+        )
         return {
-            "status": job_status,
+            "status": status,
             "job_id": job_id,
-            "output": "TODO",
+            "output": output,
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
