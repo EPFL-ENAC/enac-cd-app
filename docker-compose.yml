@@ -33,6 +33,9 @@ services:
       - REDIS_OM_URL=redis://redis:6379
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - .env
+      - .secret.env
 
   redis:
     image: redis/redis-stack:latest

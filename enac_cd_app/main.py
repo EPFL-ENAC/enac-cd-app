@@ -12,6 +12,8 @@ from enac_cd_app.utils import redis
 from enac_cd_app.utils.ip import check_ip_is_local
 
 CD_ENV = os.environ.get("CD_ENV")
+GH_USERNAME = os.environ.get("GH_USERNAME")
+GH_PAT = os.environ.get("GH_PAT")
 
 app = FastAPI(
     title=__name__,
@@ -26,6 +28,7 @@ def inject_apps():
     redis.inject_fake_deployment()  # TODO: remove this
     try:
         client = docker.from_env()
+        client.login(username=GH_USERNAME, password=GH_PAT, registry="ghcr.io")
         output = client.containers.run(
             "ghcr.io/epfl-enac/enacit-ansible:latest",
             "announce-apps",
@@ -61,6 +64,7 @@ async def get_root():
 def app_deploy(inventory: str, job_id: int):
     try:
         client = docker.from_env()
+        client.login(username=GH_USERNAME, password=GH_PAT, registry="ghcr.io")
         output = client.containers.run(
             "ghcr.io/epfl-enac/enacit-ansible:latest",
             f"app-deploy {inventory} {job_id}",
@@ -174,7 +178,7 @@ async def get_inject_apps():
     return {"status": "launched"}
 
 
-def initial_inject_apps():
+def init():
     time.sleep(2)  # be sure FastAPI is ready
     inject_apps()
 
@@ -184,5 +188,5 @@ async def startup_event():
     """
     On startup, inject apps in an other process
     """
-    p = Process(target=initial_inject_apps)
+    p = Process(target=init)
     p.start()
