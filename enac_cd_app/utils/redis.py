@@ -11,29 +11,6 @@ from redis_om.model.model import NotFoundError
 from .redis_models import DeployedApp, RunningAppDeployment, RunningStates
 
 
-def inject_apps():
-    # TODO: remove this
-    for app in (
-        DeployedApp(
-            app_name="myapp1",
-            secret_key="secret1",
-            inventory="inventory_123",
-        ),
-        DeployedApp(
-            app_name="myapp2",
-            secret_key="secret2",
-            inventory="inventory_abc",
-        ),
-    ):
-        app.save()
-
-
-def remove_all_running_app_deployments():
-    # TODO: remove this
-    for pk in RunningAppDeployment.all_pks():
-        RunningAppDeployment.delete(pk=pk)
-
-
 def get_available_apps() -> List:
     # TODO: remove this
     inventory = []
