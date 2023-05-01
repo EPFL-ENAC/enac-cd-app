@@ -95,27 +95,27 @@ def set_deploy_starting(inventory: str) -> int:
     return starting_deploy.pk
 
 
-def read_job_status(inventory: str, job_id: int) -> str:
+def read_job_status(inventory: str, job_id: str) -> str:
     """
     Get the status of a job
     """
     try:
         running_deploy = RunningAppDeployment.find(
             RunningAppDeployment.inventory == inventory
+            and RunningAppDeployment.pk == job_id
         ).first()
     except NotFoundError:
         raise Exception("App deployment not found")
-    if running_deploy.pk != job_id:
-        raise Exception("App deployment not found")
     output = running_deploy.output
-    running_deploy.output = ""
+    running_deploy.output = ""  # clear the output
+    running_deploy.save()
     return {
         "status": RunningStates(running_deploy.status).name.lower(),
         "output": output,
     }
 
 
-def set_job_status(job_id: int, status: str, output: str):
+def set_job_status(job_id: str, status: str, output: str):
     """
     Set the status of a job
     """

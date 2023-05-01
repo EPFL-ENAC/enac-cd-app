@@ -1,7 +1,6 @@
 import os
 import time
 from multiprocessing import Process
-from operator import itemgetter
 from typing import Dict, List
 
 import docker
@@ -61,7 +60,7 @@ async def get_root():
     return {"app": __name__, "version": __version__}
 
 
-def app_deploy(inventory: str, job_id: int):
+def app_deploy(inventory: str, job_id: str):
     try:
         client = docker.from_env()
         client.login(username=GH_USERNAME, password=GH_PAT, registry="ghcr.io")
@@ -130,15 +129,11 @@ async def get_job_status(name: str, key: str, job_id: str):
     """
     try:
         inventory = redis.get_app_inventory(app_name=name, secret_key=key)
-        status, output = itemgetter(
-            "status",
-            "output",
-            redis.read_job_status(inventory=inventory, job_id=job_id),
-        )
+        running_job = redis.read_job_status(inventory=inventory, job_id=job_id)
         return {
-            "status": status,
+            "status": running_job.get("status"),
             "job_id": job_id,
-            "output": output,
+            "output": running_job.get("output"),
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
