@@ -6,7 +6,7 @@ dev:
 
 run:
 	docker compose build --pull
-	docker compose up -d --remove-orphans
+	docker compose --env-file .secret.env --env-file .env up -d --remove-orphans
 
 generate-selfsigned-cert:
 	cd cert && OWNER="${UID}.${GID}" docker compose up --remove-orphans
