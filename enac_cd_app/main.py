@@ -4,7 +4,7 @@ from multiprocessing import Process
 from typing import Dict, List
 
 import docker
-from fastapi import Depends, FastAPI
+from fastapi import BackgroundTasks, Depends, FastAPI
 
 from enac_cd_app import __name__, __version__
 from enac_cd_app.utils import redis
@@ -92,7 +92,7 @@ def app_deploy(inventory: str, job_id: str):
 
 
 @app.get("/app-deploy/")
-async def get_app_deploy(name: str, key: str):
+async def get_app_deploy(name: str, key: str, background_tasks: BackgroundTasks):
     """
     Deploy an app
     name and key must match an inventory from the database
@@ -100,8 +100,7 @@ async def get_app_deploy(name: str, key: str):
     try:
         inventory = redis.get_app_inventory(app_name=name, secret_key=key)
         job_id = redis.set_deploy_starting(inventory=inventory)
-        p = Process(target=app_deploy, args=(inventory, job_id))
-        p.start()
+        background_tasks.add_task(app_deploy, inventory, job_id)
 
         return {
             "status": "starting",
@@ -163,12 +162,11 @@ async def get_get_available_apps():
 
 
 @app.get("/inject-apps/", dependencies=[Depends(check_ip_is_local)])
-async def get_inject_apps():
+async def get_inject_apps(background_tasks: BackgroundTasks):
     """
     TODO remove this endpoint
     """
-    p = Process(target=inject_apps)
-    p.start()
+    background_tasks.add_task(inject_apps)
 
     return {"status": "launched"}
 
