@@ -132,17 +132,6 @@ def set_job_status(job_id: str, status: str, output: str):
     running_deploy.save()
 
 
-def inject_fake_deployment():
-    # TODO: remove this
-    starting_deploy = RunningAppDeployment(
-        inventory="bla",
-        status=RunningStates.STARTING,
-        started_at=datetime.datetime.now(),
-        output="",
-    ).save()
-    print(f"created fake deployment with id {starting_deploy.pk}")
-
-
 # Before running queries, we need to run migrations to set up the
 # indexes that Redis OM will use. You can also use the `migrate`
 # CLI tool for this!

@@ -24,7 +24,6 @@ def inject_apps():
     """
     Run enacit-ansible announce-apps in a docker container
     """
-    redis.inject_fake_deployment()  # TODO: remove this
     try:
         client = docker.from_env()
         client.login(username=GH_USERNAME, password=GH_PAT, registry="ghcr.io")
