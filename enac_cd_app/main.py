@@ -122,7 +122,7 @@ async def set_job_status(payload: dict):
     return {"status": "saved"}
 
 
-@app.get("/job-status/")
+@app.post("/job-status/")
 async def get_job_status(payload: dict):
     """
     Read the status of a job
