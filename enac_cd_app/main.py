@@ -63,6 +63,7 @@ def app_deploy(inventory: str, job_id: str):
     try:
         client = docker.from_env()
         client.login(username=GH_USERNAME, password=GH_PAT, registry="ghcr.io")
+        client.images.pull("ghcr.io/epfl-enac/enacit-ansible", tag="latest")
         output = client.containers.run(
             "ghcr.io/epfl-enac/enacit-ansible:latest",
             f"app-deploy {inventory} {job_id}",
