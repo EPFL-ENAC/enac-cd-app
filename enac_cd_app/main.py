@@ -95,12 +95,14 @@ def app_deploy(inventory: str, job_id: str):
 async def get_app_deploy(payload: dict, background_tasks: BackgroundTasks):
     """
     Deploy an app
-    name and key must match an inventory from the database
+    deployment_id and deployment_secret must match an inventory from the database
     """
     try:
-        name = payload.get("name")
-        key = payload.get("key")
-        inventory = redis.get_app_inventory(app_name=name, secret_key=key)
+        deployment_id = payload.get("deployment_id")
+        deployment_secret = payload.get("deployment_secret")
+        inventory = redis.get_app_inventory(
+            deployment_id=deployment_id, deployment_secret=deployment_secret
+        )
         job_id = redis.set_deploy_starting(inventory=inventory)
         background_tasks.add_task(app_deploy, inventory, job_id)
 
@@ -126,13 +128,15 @@ async def set_job_status(payload: dict):
 async def get_job_status(payload: dict):
     """
     Read the status of a job
-    name and key must match an inventory from the database
+    deployment_id and deployment_secret must match an inventory from the database
     """
     try:
-        name = payload.get("name")
-        key = payload.get("key")
+        deployment_id = payload.get("deployment_id")
+        deployment_secret = payload.get("deployment_secret")
         job_id = payload.get("job_id")
-        inventory = redis.get_app_inventory(app_name=name, secret_key=key)
+        inventory = redis.get_app_inventory(
+            deployment_id=deployment_id, deployment_secret=deployment_secret
+        )
         running_job = redis.read_job_status(inventory=inventory, job_id=job_id)
         return {
             "status": running_job.get("status"),

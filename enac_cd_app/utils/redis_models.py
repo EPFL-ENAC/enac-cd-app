@@ -9,9 +9,9 @@ class DeployedApp(JsonModel):
     Define an app that can be deployed
     """
 
-    app_name: str = Field(index=True)
-    secret_key: str
     inventory: str
+    deployment_id: str = Field(index=True)
+    deployment_secret: str
 
     class Meta:
         global_key_prefix = "deployed-app-json"
