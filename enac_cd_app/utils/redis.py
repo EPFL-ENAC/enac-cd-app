@@ -18,9 +18,9 @@ def get_available_apps() -> List:
         app = DeployedApp.find(DeployedApp.pk == pk).first()
         inventory.append(
             {
-                "app_name": app.app_name,
                 "inventory": app.inventory,
-                "secret": app.secret_key,
+                "deployment_id": app.deployment_id,
+                "deployment_secret": app.deployment_secret,
             }
         )
     return inventory
@@ -31,14 +31,14 @@ def set_available_apps(inventory: List):
     Example of inventory:
     inventory = [
         {
-        "app_name": "app-one",
-        "inventory": "app-one.epfl.ch",
-        "secret": "secret123",
+            "inventory": "app-one.epfl.ch",
+            "deployment_id": "app-one",
+            "deployment_secret": "secret123",
         },
         {
-        "app_name": "app-two",
-        "inventory": "app-two.epfl.ch",
-        "secret": "secretABC",
+            "inventory": "app-two.epfl.ch",
+            "deployment_id": "app-two",
+            "deployment_secret": "secretABC",
         }
     ]
     """
@@ -49,21 +49,21 @@ def set_available_apps(inventory: List):
     # add new apps
     for app in inventory:
         DeployedApp(
-            app_name=app["app_name"],
-            secret_key=app["secret"],
             inventory=app["inventory"],
+            deployment_id=app["deployment_id"],
+            deployment_secret=app["deployment_secret"],
         ).save()
 
 
-def get_app_inventory(app_name: str, secret_key: str) -> str:
+def get_app_inventory(deployment_id: str, deployment_secret: str) -> str:
     """
     Get the inventory of an app
     """
     try:
-        app = DeployedApp.find(DeployedApp.app_name == app_name).first()
+        app = DeployedApp.find(DeployedApp.deployment_id == deployment_id).first()
     except NotFoundError:
         raise Exception("App not found")
-    if app.secret_key != secret_key:
+    if app.deployment_secret != deployment_secret:
         # we don't want to leak the existence of the app
         raise Exception("App not found")
     return app.inventory

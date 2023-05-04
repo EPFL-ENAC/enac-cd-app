@@ -16,7 +16,7 @@ sequenceDiagram
 
     Note over GHR: Phase 1: Request from external Runner
 
-    GHR->>CD: /app-deploy/?name=myapp1&key=secret1
+    GHR->>CD: POST /app-deploy/ deployment_id=myapp1 deployment_secret=secret1
     CD->>R-App: does that app exist?
     R-App->>CD: yes, it has inventory="inventory1"
     CD->>R-Running: is that inventory already being deployed?\nif not set its status to "starting"
@@ -30,20 +30,20 @@ sequenceDiagram
     enacit-ansible->>enacit-ansible: do the ansible app deployment
 
     Note over GHR: Any time the status may be requested
-    GHR->>CD: /job-status/?job_id=jobid-123
+    GHR->>CD: /job-status/ deployment_id=myapp1 deployment_secret=secret1 job_id=jobid-123
     CD->>R-Running: get status for job_id="jobid-123"
     R-Running->>CD: status is "running" with output
     CD->>GHR: status is "running" with output
 
-    Note over enacit-ansible: Phase 3: app-deploy is done
-    enacit-ansible->>CD: set status for job_id="jobid-123" to "done" with output
-    CD->>R-Running: set status for job_id="jobid-123" to "done" with output
+    Note over enacit-ansible: Phase 3: app-deploy is finished
+    enacit-ansible->>CD: set status for job_id="jobid-123" to "finished" with output
+    CD->>R-Running: set status for job_id="jobid-123" to "finished" with output
 
     Note over GHR: Phase 4: Last time the status is requested
-    GHR->>CD: /job-status/?job_id=jobid-123
+    GHR->>CD: /job-status/ deployment_id=myapp1 deployment_secret=secret1 job_id=jobid-123
     CD->>R-Running: get status for job_id="jobid-123"
-    R-Running->>CD: status is "done" with output
-    CD->>GHR: status is "done" with output
+    R-Running->>CD: status is "finished" with output
+    CD->>GHR: status is "finished" with output
 
 ```
 
@@ -70,7 +70,7 @@ sequenceDiagram
     R-App->>CD: ok
     CD->>enacit-feed: ok
 
-    Note over enacit-ansible: Phase 3: app-deploy is done<br/>Same as for App Continuous Deploy
+    Note over enacit-ansible: Phase 3: app-deploy is finished<br/>Same as for App Continuous Deploy
 
     Note over GHR: Phase 4: Last time the status is requested<br/>Same as for App Continuous Deploy
 ```
@@ -81,6 +81,12 @@ sequenceDiagram
 
 ```bash
 make generate-selfsigned-cert
+
+touch .env
+cat << EOF > .secret.env
+export REDIS_PASSWORD=secret
+EOF
+
 make run
 ```
 
@@ -89,16 +95,29 @@ Browse RedisInsight at http://localhost:8001
 Simulate a app-deploy:
 
 ```bash
-http --verify no "https://localhost/app-deploy/?name=myapp1&key=secret1"
-# # works 1st time
+http --verify no POST "https://localhost/set-available-apps/" < sample_inventory.json
 # HTTP/1.1 200 OK
-# Content-Length: 84
+# Content-Length: 15
 # Content-Type: application/json
-# Date: Thu, 13 Apr 2023 08:22:37 GMT
+# Date: Tue, 02 May 2023 13:57:55 GMT
 # Server: uvicorn
 
 # {
-#     "job_id": "01GXWVB721DKCAZENADFNKNM4G",
+#     "status": "ok"
+# }
+
+
+http --verify no POST https://localhost/app-deploy/ deployment_id=app-one deployment_secret=secret123
+# # works 1st time
+# HTTP/1.1 200 OK
+# Content-Length: 71
+# Content-Type: application/json
+# Date: Tue, 02 May 2023 13:59:23 GMT
+# Server: uvicorn
+
+# {
+#     "job_id": "01GZEC5GJHFKWMK4Z5A1NM9DPF",
+#     "output": "",
 #     "status": "starting"
 # }
 
@@ -106,7 +125,7 @@ http --verify no "https://localhost/app-deploy/?name=myapp1&key=secret1"
 # HTTP/1.1 200 OK
 # Content-Length: 62
 # Content-Type: application/json
-# Date: Thu, 13 Apr 2023 08:22:47 GMT
+# Date: Tue, 02 May 2023 13:59:58 GMT
 # Server: uvicorn
 
 # {
@@ -114,111 +133,40 @@ http --verify no "https://localhost/app-deploy/?name=myapp1&key=secret1"
 #     "status": "error"
 # }
 
-http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=01GXWVB721DKCAZENADFNKNM4G"
+http --verify no POST https://localhost/job-status/ deployment_id=app-one deployment_secret=secret123 job_id=01GZEC5GJHFKWMK4Z5A1NM9DPF
 # HTTP/1.1 200 OK
-# Content-Length: 75
+# Content-Length: 71
 # Content-Type: application/json
-# Date: Tue, 25 Apr 2023 09:37:08 GMT
+# Date: Tue, 02 May 2023 14:00:52 GMT
 # Server: uvicorn
 
 # {
-#     "job_id": "01GXWVB721DKCAZENADFNKNM4G",
-#     "output": "TODO",
+#     "job_id": "01GZEC5GJHFKWMK4Z5A1NM9DPF",
+#     "output": "",
 #     "status": "starting"
 # }
 
-http --verify no POST "https://localhost/set-available-apps/" < sample_inventory.json
-# HTTP/1.1 200 OK
-# Content-Length: 15
-# Content-Type: application/json
-# Date: Tue, 25 Apr 2023 13:16:05 GMT
-# Server: uvicorn
 
-# {
-#     "status": "ok"
-# }
-
-# TODO: removed this debug endpoint
 http --verify no "https://localhost/get-available-apps/"
 # HTTP/1.1 200 OK
-# Content-Length: 177
+# Content-Length: 209
 # Content-Type: application/json
-# Date: Tue, 25 Apr 2023 13:16:23 GMT
+# Date: Tue, 02 May 2023 14:01:25 GMT
 # Server: uvicorn
 
 # {
 #     "inventory": [
 #         {
-#             "app_name": "app-one",
-#             "inventory": "app-one.epfl.ch",
-#             "secret": "secret123"
+#             "deployment_id": "app-one",
+#             "deployment_secret": "secret123",
+#             "inventory": "app-one.epfl.ch"
 #         },
 #         {
-#             "app_name": "app-two",
-#             "inventory": "app-two.epfl.ch",
-#             "secret": "secretABC"
+#             "deployment_id": "app-two",
+#             "deployment_secret": "secretABC",
+#             "inventory": "app-two.epfl.ch"
 #         }
 #     ],
 #     "status": "ok"
-# }
-```
-
-Testing fake status update: (TODO: remove this fake!)
-
-```bash
-http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=01GYWA8F0GMDM5GGNTVPYSWEYK"
-
-# HTTP/1.1 200 OK
-# Content-Length: 75
-# Content-Type: application/json
-# Date: Tue, 25 Apr 2023 13:44:34 GMT
-# Server: uvicorn
-
-# {
-#     "job_id": "01GYWA8F0GMDM5GGNTVPYSWEYK",
-#     "output": "TODO",
-#     "status": "starting"
-# }
-
-http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=01GYWA8F0GMDM5GGNTVPYSWEYK"
-
-# HTTP/1.1 200 OK
-# Content-Length: 74
-# Content-Type: application/json
-# Date: Tue, 25 Apr 2023 13:44:35 GMT
-# Server: uvicorn
-
-# {
-#     "job_id": "01GYWA8F0GMDM5GGNTVPYSWEYK",
-#     "output": "TODO",
-#     "status": "running"
-# }
-
-http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=01GYWA8F0GMDM5GGNTVPYSWEYK"
-
-# HTTP/1.1 200 OK
-# Content-Length: 75
-# Content-Type: application/json
-# Date: Tue, 25 Apr 2023 13:44:37 GMT
-# Server: uvicorn
-
-# {
-#     "job_id": "01GYWA8F0GMDM5GGNTVPYSWEYK",
-#     "output": "TODO",
-#     "status": "finished"
-# }
-
-http --verify no "https://localhost/job-status/?name=myapp1&key=secret1&job_id=01GYWA8F0GMDM5GGNTVPYSWEYK"
-
-# HTTP/1.1 200 OK
-# Content-Length: 75
-# Content-Type: application/json
-# Date: Tue, 25 Apr 2023 13:44:38 GMT
-# Server: uvicorn
-
-# {
-#     "job_id": "01GYWA8F0GMDM5GGNTVPYSWEYK",
-#     "output": "TODO",
-#     "status": "finished"
 # }
 ```
