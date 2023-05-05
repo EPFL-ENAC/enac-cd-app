@@ -32,7 +32,7 @@ def inject_apps():
             "ghcr.io/epfl-enac/enacit-ansible:latest",
             "announce-apps",
             volumes={
-                "/opt/enac-cd-app/root/.ssh": {"bind": "/root/.ssh", "mode": "ro"},
+                "/opt/enac-cd-app/root/.ssh": {"bind": "/opt/root/.ssh", "mode": "ro"},
                 "/opt/enac-cd-app/root/.enacit-ansible_vault_password": {
                     "bind": "/root/.enacit-ansible_vault_password",
                     "mode": "rw",
@@ -70,7 +70,7 @@ def app_deploy(inventory: str, job_id: str):
             f"app-deploy {inventory} {job_id}",
             volumes={
                 "/opt/enac-cd-app/root/.ssh": {
-                    "bind": "/root/.ssh",
+                    "bind": "/opt/root/.ssh",
                     "mode": "ro",
                 },
                 "/opt/enac-cd-app/root/.enacit-ansible_vault_password": {
