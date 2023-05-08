@@ -23,6 +23,12 @@ class RunningStates(IntEnum):
     FINISHED = 3
 
 
+class RunningAppSuccess(IntEnum):
+    STILL_RUNNING = 0
+    SUCCESS = 1
+    FAILURE = 2
+
+
 class RunningAppDeployment(JsonModel):
     """
     Define a running app deployment
@@ -32,3 +38,4 @@ class RunningAppDeployment(JsonModel):
     status: RunningStates = Field(index=True)
     started_at: datetime.datetime
     output: str
+    success: RunningAppSuccess
