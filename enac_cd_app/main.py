@@ -8,7 +8,7 @@ from fastapi import BackgroundTasks, Depends, FastAPI
 
 from enac_cd_app import __name__, __version__
 from enac_cd_app.utils import redis
-from enac_cd_app.utils.ip import check_ip_is_local
+from enac_cd_app.utils.ip import check_ip_for_monitoring, check_ip_is_local
 
 CD_ENV = os.environ.get("CD_ENV")
 GH_USERNAME = os.environ.get("GH_USERNAME")
@@ -179,6 +179,14 @@ async def get_inject_apps(background_tasks: BackgroundTasks):
     background_tasks.add_task(inject_apps)
 
     return {"status": "launched"}
+
+
+@app.get("/health/", dependencies=[Depends(check_ip_for_monitoring)])
+async def get_health():
+    """
+    Return nb of currently running jobs
+    """
+    return {"status": "ok", "nb_running_jobs": redis.get_nb_running_jobs()}
 
 
 def init():

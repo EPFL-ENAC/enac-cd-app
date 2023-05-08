@@ -132,6 +132,15 @@ def set_job_status(job_id: str, status: str, output: str):
     running_deploy.save()
 
 
+def get_nb_running_jobs() -> int:
+    return len(
+        RunningAppDeployment.find(
+            RunningAppDeployment.status == RunningStates.RUNNING
+            or RunningAppDeployment.status == RunningStates.STARTING
+        ).all()
+    )
+
+
 # Before running queries, we need to run migrations to set up the
 # indexes that Redis OM will use. You can also use the `migrate`
 # CLI tool for this!
