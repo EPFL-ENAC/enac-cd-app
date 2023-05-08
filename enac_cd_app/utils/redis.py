@@ -8,12 +8,7 @@ from typing import List
 from redis_om import Migrator
 from redis_om.model.model import NotFoundError
 
-from .redis_models import (
-    DeployedApp,
-    RunningAppDeployment,
-    RunningAppSuccess,
-    RunningStates,
-)
+from .redis_models import DeployedApp, RunningAppDeployment, RunningStates
 
 
 def get_available_apps() -> List:
@@ -96,7 +91,6 @@ def set_deploy_starting(inventory: str) -> int:
         status=RunningStates.STARTING,
         started_at=datetime.datetime.now(),
         output="",
-        success=RunningAppSuccess.STILL_RUNNING,
     ).save()
     return starting_deploy.pk
 
@@ -118,7 +112,6 @@ def read_job_status(inventory: str, job_id: str) -> str:
     return {
         "status": RunningStates(running_deploy.status).name.lower(),
         "output": output,
-        "success": RunningAppSuccess(running_deploy.success).name.lower(),
     }
 
 
@@ -134,13 +127,14 @@ def set_job_status(job_id: str, status: str, output: str):
         raise Exception("App deployment not found")
     if running_deploy.pk != job_id:
         raise Exception("App deployment not found")
-    running_deploy.status = RunningStates[status.upper()]
-    running_deploy.output += output
     if status.upper() == "FINISHED":
         if output.lower().endswith("process return code: 0"):
-            running_deploy.success = RunningAppSuccess.SUCCESS
+            running_deploy.status = RunningStates.SUCCESS
         else:
-            running_deploy.success = RunningAppSuccess.FAILURE
+            running_deploy.status = RunningStates.ERROR
+    else:
+        running_deploy.status = RunningStates[status.upper()]
+    running_deploy.output += output
     running_deploy.save()
 
 

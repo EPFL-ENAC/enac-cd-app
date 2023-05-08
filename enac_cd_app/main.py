@@ -143,7 +143,6 @@ async def get_job_status(payload: dict):
             "status": running_job.get("status"),
             "job_id": job_id,
             "output": running_job.get("output"),
-            "success": running_job.get("success"),
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
