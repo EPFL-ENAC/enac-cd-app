@@ -1,3 +1,4 @@
+import datetime
 import os
 import time
 from multiprocessing import Process
@@ -126,6 +127,16 @@ async def set_job_status(payload: dict):
     job_id = payload.get("job_id")
     status = payload.get("status")
     output = payload.get("output")
+
+    # add datetime at every beginning of line
+    output = "\n".join(
+        [
+            f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {line}"
+            for line in output.rstrip().split("\n")
+        ]
+    )
+    output = f"{output}\n"
+
     redis.set_job_status(job_id=job_id, status=status, output=output)
     return {"status": "saved"}
 
