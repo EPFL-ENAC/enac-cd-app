@@ -127,7 +127,13 @@ def set_job_status(job_id: str, status: str, output: str):
         raise Exception("App deployment not found")
     if running_deploy.pk != job_id:
         raise Exception("App deployment not found")
-    running_deploy.status = RunningStates[status.upper()]
+    if status.upper() == "FINISHED":
+        if output.lower().endswith("process return code: 0"):
+            running_deploy.status = RunningStates.SUCCESS
+        else:
+            running_deploy.status = RunningStates.ERROR
+    else:
+        running_deploy.status = RunningStates[status.upper()]
     running_deploy.output += output
     running_deploy.save()
 

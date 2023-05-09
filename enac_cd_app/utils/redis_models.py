@@ -20,7 +20,8 @@ class DeployedApp(JsonModel):
 class RunningStates(IntEnum):
     STARTING = 1
     RUNNING = 2
-    FINISHED = 3
+    SUCCESS = 3
+    ERROR = 4
 
 
 class RunningAppDeployment(JsonModel):
