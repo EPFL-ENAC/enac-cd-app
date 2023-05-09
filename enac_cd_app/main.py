@@ -7,7 +7,7 @@ import docker
 from fastapi import BackgroundTasks, Depends, FastAPI
 
 from enac_cd_app import __name__, __version__
-from enac_cd_app.utils import redis
+from enac_cd_app.utils import redis, redis_models
 from enac_cd_app.utils.ip import check_ip_for_monitoring, check_ip_is_local
 
 CD_ENV = os.environ.get("CD_ENV")
@@ -104,13 +104,18 @@ async def get_app_deploy(payload: dict, background_tasks: BackgroundTasks):
         inventory = redis.get_app_inventory(
             deployment_id=deployment_id, deployment_secret=deployment_secret
         )
-        job_id = redis.set_deploy_starting(inventory=inventory)
-        background_tasks.add_task(app_deploy, inventory, job_id)
+        deployment = redis.set_deploy_starting(inventory=inventory)
+        if deployment["need_to_start"]:
+            background_tasks.add_task(
+                app_deploy, inventory, deployment["running_app_deployment"].pk
+            )
 
         return {
-            "status": "starting",
-            "job_id": job_id,
-            "output": "",
+            "status": redis_models.RunningStates(
+                deployment["running_app_deployment"].status
+            ).name.lower(),
+            "job_id": deployment["running_app_deployment"].pk,
+            "output": deployment["running_app_deployment"].output,
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
@@ -138,11 +143,13 @@ async def get_job_status(payload: dict):
         inventory = redis.get_app_inventory(
             deployment_id=deployment_id, deployment_secret=deployment_secret
         )
-        running_job = redis.read_job_status(inventory=inventory, job_id=job_id)
+        deployment = redis.get_running_app_deployment(
+            inventory=inventory, job_id=job_id
+        )
         return {
-            "status": running_job.get("status"),
+            "status": redis_models.RunningStates(deployment.status).name.lower(),
             "job_id": job_id,
-            "output": running_job.get("output"),
+            "output": deployment.output,
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}

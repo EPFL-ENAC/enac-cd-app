@@ -74,6 +74,8 @@ def set_deploy_starting(inventory: str) -> int:
     Save the status of an app deployment to starting
     """
     # Check if the app deployment is already running
+    need_to_start = True
+    running_app_deployment = None
     try:
         for running_deploy in RunningAppDeployment.find(
             RunningAppDeployment.inventory == inventory
@@ -82,37 +84,38 @@ def set_deploy_starting(inventory: str) -> int:
                 RunningStates.STARTING,
                 RunningStates.RUNNING,
             ):
-                raise Exception("App deployment is already running")
+                need_to_start = False
+                running_app_deployment = running_deploy
     except NotFoundError:
         pass
 
-    starting_deploy = RunningAppDeployment(
-        inventory=inventory,
-        status=RunningStates.STARTING,
-        started_at=datetime.datetime.now(),
-        output="",
-    ).save()
-    return starting_deploy.pk
+    if running_app_deployment is None:
+        running_app_deployment = RunningAppDeployment(
+            inventory=inventory,
+            status=RunningStates.STARTING,
+            started_at=datetime.datetime.now(),
+            output="",
+        ).save()
+
+    return {
+        "running_app_deployment": running_app_deployment,
+        "need_to_start": need_to_start,
+    }
 
 
-def read_job_status(inventory: str, job_id: str) -> str:
+def get_running_app_deployment(inventory: str, job_id: str) -> str:
     """
-    Get the status of a job
+    Return RunningAppDeployment matching inventory and job_id
     """
     try:
-        running_deploy = RunningAppDeployment.find(
+        deployment = RunningAppDeployment.find(
             RunningAppDeployment.inventory == inventory
             and RunningAppDeployment.pk == job_id
         ).first()
     except NotFoundError:
         raise Exception("App deployment not found")
-    output = running_deploy.output
-    running_deploy.output = ""  # clear the output
-    running_deploy.save()
-    return {
-        "status": RunningStates(running_deploy.status).name.lower(),
-        "output": output,
-    }
+
+    return deployment
 
 
 def set_job_status(job_id: str, status: str, output: str):
