@@ -10,6 +10,8 @@ from redis_om.model.model import NotFoundError
 
 from .redis_models import DeployedApp, RunningAppDeployment, RunningStates
 
+REDIS_TMP_ENTRIES_TTL = 60 * 60 * 24 * 7  # 7 day
+
 
 def get_available_apps() -> List:
     # TODO: remove this
@@ -95,7 +97,9 @@ def set_deploy_starting(inventory: str) -> int:
             status=RunningStates.STARTING,
             started_at=datetime.datetime.now(),
             output="",
-        ).save()
+        )
+        running_app_deployment.expire(REDIS_TMP_ENTRIES_TTL)
+        running_app_deployment.save()
 
     return {
         "running_app_deployment": running_app_deployment,
@@ -138,6 +142,7 @@ def set_job_status(job_id: str, status: str, output: str):
     else:
         running_deploy.status = RunningStates[status.upper()]
     running_deploy.output += output
+    running_deploy.expire(REDIS_TMP_ENTRIES_TTL)
     running_deploy.save()
 
 
