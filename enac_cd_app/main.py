@@ -21,11 +21,13 @@ app = FastAPI(
 )
 
 
-def inject_apps():
+def inject_apps(job_id: str = None):
     """
     Run enacit-ansible announce-apps in a docker container
     """
     try:
+        if job_id is not None:
+            redis.set_job_status(job_id=job_id, status="running", output="")
         client = docker.from_env()
         client.login(username=GH_USERNAME, password=GH_PAT, registry="ghcr.io")
         client.images.pull("ghcr.io/epfl-enac/enacit-ansible", tag="latest")
@@ -44,13 +46,17 @@ def inject_apps():
             },
             network="enac-cd-app_default",
         )
-        output.decode()
+        output = output.decode("utf-8")
         print(output, flush=True)
+        if job_id is not None:
+            redis.set_job_status(job_id=job_id, status="success", output=output)
     except Exception as e:
         print(
             f"Error while running enacit-ansible announce-apps: {str(e)}",
             flush=True,
         )
+        if job_id is not None:
+            redis.set_job_status(job_id=job_id, status="error", output=str(e))
 
 
 @app.get("/")
@@ -84,7 +90,7 @@ def app_deploy(inventory: str, job_id: str):
             },
             network="enac-cd-app_default",
         )
-        output.decode()
+        output = output.decode("utf-8")
         print(output, flush=True)
     except Exception as e:
         print(
@@ -107,9 +113,15 @@ async def get_app_deploy(payload: dict, background_tasks: BackgroundTasks):
         )
         deployment = redis.set_deploy_starting(inventory=inventory)
         if deployment["need_to_start"]:
-            background_tasks.add_task(
-                app_deploy, inventory, deployment["running_app_deployment"].pk
-            )
+            if inventory == "cd_runner_with_enacit_ansible":
+                # Special case to CD enacit-ansible on self
+                background_tasks.add_task(
+                    inject_apps, deployment["running_app_deployment"].pk
+                )
+            else:
+                background_tasks.add_task(
+                    app_deploy, inventory, deployment["running_app_deployment"].pk
+                )
 
         return {
             "status": redis_models.RunningStates(
