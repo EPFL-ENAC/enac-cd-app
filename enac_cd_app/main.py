@@ -72,7 +72,7 @@ def app_deploy(inventory: str, job_id: str):
         client = docker.from_env()
         client.login(username=GH_USERNAME, password=GH_PAT, registry="ghcr.io")
         client.images.pull("ghcr.io/epfl-enac/enacit-ansible", tag="latest")
-        output = client.containers.run(
+        container = client.containers.run(
             "ghcr.io/epfl-enac/enacit-ansible:latest",
             f"app-deploy {inventory} {job_id}",
             volumes={
@@ -89,9 +89,10 @@ def app_deploy(inventory: str, job_id: str):
                 "CD_ENV": CD_ENV,
             },
             network="enac-cd-app_default",
+            detach=True,
+            pid_mode="host",
         )
-        output = output.decode("utf-8")
-        print(output, flush=True)
+        print(f"Launched app-deploy in container {container}", flush=True)
     except Exception as e:
         print(
             f"Error while running enacit-ansible announce-apps: {str(e)}",
