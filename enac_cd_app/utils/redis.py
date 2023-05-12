@@ -155,6 +155,32 @@ def get_nb_running_jobs() -> int:
     )
 
 
+def get_load_report() -> dict:
+    """
+    Return a dict with the health of the app
+    for last hour, last day, last week:
+      nb of jobs with starting, running, success, error
+    """
+    now = datetime.datetime.now()
+    periods = {
+        "1 hour": now - datetime.timedelta(hours=1),
+        "1 day": now - datetime.timedelta(days=1),
+        "1 week": now - datetime.timedelta(days=7),
+    }
+    load_report = {
+        period: {status: 0 for status in ["starting", "running", "success", "error"]}
+        for period in periods
+    }
+    for running_deploy in RunningAppDeployment.find().all():
+        for period in periods:
+            if running_deploy.started_at > periods[period]:
+                load_report[period][
+                    RunningStates(running_deploy.status).name.lower()
+                ] += 1
+
+    return load_report
+
+
 # Before running queries, we need to run migrations to set up the
 # indexes that Redis OM will use. You can also use the `migrate`
 # CLI tool for this!

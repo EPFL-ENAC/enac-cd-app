@@ -211,12 +211,16 @@ async def get_inject_apps(background_tasks: BackgroundTasks):
     return {"status": "launched"}
 
 
-@app.get("/health/", dependencies=[Depends(check_ip_for_monitoring)])
-async def get_health():
+@app.get("/load/", dependencies=[Depends(check_ip_for_monitoring)])
+async def get_load():
     """
-    Return nb of currently running jobs
+    Return Redis activity load
     """
-    return {"status": "ok", "nb_running_jobs": redis.get_nb_running_jobs()}
+    try:
+        load_report = redis.get_load_report()
+        return {"status": "ok", "load": load_report}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 
 def init():
