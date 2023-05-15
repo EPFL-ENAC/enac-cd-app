@@ -23,7 +23,7 @@ async def get_root():
 
 
 @app.post("/app-deploy/")
-async def get_app_deploy(payload: dict, background_tasks: BackgroundTasks):
+async def post_app_deploy(payload: dict, background_tasks: BackgroundTasks):
     """
     Deploy an app
     deployment_id and deployment_secret must match an inventory from the database
@@ -76,11 +76,17 @@ async def get_job_status(payload: dict):
         deployment = my_redis.get_running_app_deployment(
             inventory=inventory, job_id=job_id
         )
-        if deployment.status in (
-            my_redis_models.RunningStates.STARTING,
-            my_redis_models.RunningStates.RUNNING,
+        if (
+            deployment.status
+            in (
+                my_redis_models.RunningStates.STARTING,
+                my_redis_models.RunningStates.RUNNING,
+            )
+            and deployment.container_id != ""
         ):
-            my_docker.check_container(deployment)
+            my_docker.check_container(
+                container_id=deployment.container_id, job_id=job_id
+            )
             deployment = my_redis.get_running_app_deployment(
                 inventory=inventory, job_id=job_id
             )

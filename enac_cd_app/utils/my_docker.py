@@ -4,11 +4,12 @@ import time
 import docker
 from fastapi import BackgroundTasks
 
-from enac_cd_app.utils import my_redis, my_redis_models
+from enac_cd_app.utils import my_redis
 
 CD_ENV = os.environ.get("CD_ENV")
 GH_USERNAME = os.environ.get("GH_USERNAME")
 GH_PAT = os.environ.get("GH_PAT")
+SELF_CONTAINER_CHECK_INTERVAL = 5  # seconds
 
 
 def inject_apps(job_id: str = None) -> None:
@@ -78,9 +79,10 @@ def app_deploy(inventory: str, job_id: str, background_tasks: BackgroundTasks) -
             pid_mode="host",
         )
         my_redis.set_container_id(container_id=container.id, job_id=job_id)
-        print(f"Launched app-deploy in container {container}", flush=True)
+        print(f"{job_id=} Launched app-deploy in container {container}", flush=True)
         check_container(
-            my_redis.get_running_app_deployment(inventory=inventory, job_id=job_id),
+            container_id=container.id,
+            job_id=job_id,
             periodic_check=True,
             background_tasks=background_tasks,
         )
@@ -92,7 +94,8 @@ def app_deploy(inventory: str, job_id: str, background_tasks: BackgroundTasks) -
 
 
 def check_container(
-    deployment: my_redis_models.RunningAppDeployment,
+    container_id: str,
+    job_id: str,
     periodic_check: bool = False,
     background_tasks: BackgroundTasks = None,
 ) -> None:
@@ -100,21 +103,23 @@ def check_container(
     Check if container is still running
     get output and status from it
     """
-    container = docker.from_env().containers.get(deployment.container_id)
+    container = docker.from_env().containers.get(container_id)
     # read container logs
     output = container.logs().decode("utf-8")
     if container.status == "running":
         # if container is still running, update output and status
-        my_redis.set_job_status(job_id=deployment.pk, status="running", output=output)
+        my_redis.set_job_status(job_id=job_id, status="running", output=output)
         if periodic_check:
-            time.sleep(2)
+            time.sleep(SELF_CONTAINER_CHECK_INTERVAL)
             background_tasks.add_task(
-                check_container, deployment, periodic_check, background_tasks
+                check_container,
+                container_id,
+                job_id,
+                periodic_check,
+                background_tasks,
             )
     else:
         if output.endswith("Process terminated with return code: 0\n"):
-            my_redis.set_job_status(
-                job_id=deployment.pk, status="success", output=output
-            )
+            my_redis.set_job_status(job_id=job_id, status="success", output=output)
         else:
-            my_redis.set_job_status(job_id=deployment.pk, status="error", output=output)
+            my_redis.set_job_status(job_id=job_id, status="error", output=output)

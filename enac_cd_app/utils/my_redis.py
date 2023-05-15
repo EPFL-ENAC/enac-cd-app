@@ -132,6 +132,8 @@ def set_job_status(job_id: str, output: str, status: str) -> None:
         ).first()
     except NotFoundError:
         raise Exception("App deployment not found")
+    if running_deploy.status != RunningStates[status.upper()]:
+        print(f"{job_id=} Changed to {status=}", flush=True)
     running_deploy.output = output
     running_deploy.status = RunningStates[status.upper()]
     running_deploy.expire(REDIS_TMP_ENTRIES_TTL)
