@@ -5,7 +5,7 @@ from typing import Dict, List
 from fastapi import BackgroundTasks, Depends, FastAPI
 
 from enac_cd_app import __name__, __version__
-from enac_cd_app.utils import my_docker, redis, redis_models
+from enac_cd_app.utils import my_docker, my_redis, my_redis_models
 from enac_cd_app.utils.ip import check_ip_for_monitoring, check_ip_is_local
 
 app = FastAPI(
@@ -31,10 +31,10 @@ async def get_app_deploy(payload: dict, background_tasks: BackgroundTasks):
     try:
         deployment_id = payload.get("deployment_id")
         deployment_secret = payload.get("deployment_secret")
-        inventory = redis.get_app_inventory(
+        inventory = my_redis.get_app_inventory(
             deployment_id=deployment_id, deployment_secret=deployment_secret
         )
-        deployment = redis.set_deploy_starting(inventory=inventory)
+        deployment = my_redis.set_deploy_starting(inventory=inventory)
         if deployment["need_to_start"]:
             if inventory == "cd_runner_with_enacit_ansible":
                 # Special case to CD enacit-ansible on self
@@ -50,7 +50,7 @@ async def get_app_deploy(payload: dict, background_tasks: BackgroundTasks):
                 )
 
         return {
-            "status": redis_models.RunningStates(
+            "status": my_redis_models.RunningStates(
                 deployment["running_app_deployment"].status
             ).name.lower(),
             "job_id": deployment["running_app_deployment"].pk,
@@ -70,22 +70,22 @@ async def get_job_status(payload: dict):
         deployment_id = payload.get("deployment_id")
         deployment_secret = payload.get("deployment_secret")
         job_id = payload.get("job_id")
-        inventory = redis.get_app_inventory(
+        inventory = my_redis.get_app_inventory(
             deployment_id=deployment_id, deployment_secret=deployment_secret
         )
-        deployment = redis.get_running_app_deployment(
+        deployment = my_redis.get_running_app_deployment(
             inventory=inventory, job_id=job_id
         )
         if deployment.status in (
-            redis_models.RunningStates.STARTING,
-            redis_models.RunningStates.RUNNING,
+            my_redis_models.RunningStates.STARTING,
+            my_redis_models.RunningStates.RUNNING,
         ):
             my_docker.check_container(deployment)
-            deployment = redis.get_running_app_deployment(
+            deployment = my_redis.get_running_app_deployment(
                 inventory=inventory, job_id=job_id
             )
         return {
-            "status": redis_models.RunningStates(deployment.status).name.lower(),
+            "status": my_redis_models.RunningStates(deployment.status).name.lower(),
             "job_id": job_id,
             "output": deployment.output,
         }
@@ -99,7 +99,7 @@ async def post_set_available_apps(inventory: List[Dict]):
     Set the available apps from inventory to the database
     """
     try:
-        redis.set_available_apps(inventory=inventory)
+        my_redis.set_available_apps(inventory=inventory)
         return {"status": "ok"}
     except Exception as e:
         return {"status": "error", "error": str(e)}
@@ -113,7 +113,7 @@ async def get_get_available_apps():
     """
     print("!!!!!!!!!!!!!!!!!!!!! TODO remove this endpoint", flush=True)
     try:
-        return {"status": "ok", "inventory": redis.get_available_apps()}
+        return {"status": "ok", "inventory": my_redis.get_available_apps()}
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
@@ -142,7 +142,7 @@ async def get_load(periods: str = "1_hour:3600,1_day:86400,1_week:604800"):
                 period.split(":") for period in periods.split(",")
             ]
         }
-        load_report = redis.get_load_report(query)
+        load_report = my_redis.get_load_report(query)
         return {"status": "ok", "load": load_report}
     except Exception as e:
         return {"status": "error", "error": str(e)}

@@ -8,7 +8,7 @@ from typing import List
 from redis_om import Migrator
 from redis_om.model.model import NotFoundError
 
-from .redis_models import DeployedApp, RunningAppDeployment, RunningStates
+from .my_redis_models import DeployedApp, RunningAppDeployment, RunningStates
 
 REDIS_TMP_ENTRIES_TTL = 60 * 60 * 24 * 7  # 7 day
 
