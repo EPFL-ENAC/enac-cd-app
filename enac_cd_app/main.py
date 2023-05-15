@@ -105,30 +105,6 @@ async def post_set_available_apps(inventory: List[Dict]):
         return {"status": "error", "error": str(e)}
 
 
-@app.get("/get-available-apps/", dependencies=[Depends(check_ip_is_local)])
-async def get_get_available_apps():
-    """
-    TODO remove this endpoint
-    Get the available apps from the database
-    """
-    print("!!!!!!!!!!!!!!!!!!!!! TODO remove this endpoint", flush=True)
-    try:
-        return {"status": "ok", "inventory": my_redis.get_available_apps()}
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
-
-
-@app.get("/inject-apps/", dependencies=[Depends(check_ip_is_local)])
-async def get_inject_apps(background_tasks: BackgroundTasks):
-    """
-    TODO remove this endpoint
-    """
-    print("!!!!!!!!!!!!!!!!!!!!! TODO remove this endpoint", flush=True)
-    background_tasks.add_task(my_docker.inject_apps)
-
-    return {"status": "launched"}
-
-
 @app.get("/load/", dependencies=[Depends(check_ip_for_monitoring)])
 async def get_load(periods: str = "1_hour:3600,1_day:86400,1_week:604800"):
     """

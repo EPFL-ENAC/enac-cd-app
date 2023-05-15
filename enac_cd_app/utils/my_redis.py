@@ -13,22 +13,6 @@ from .my_redis_models import DeployedApp, RunningAppDeployment, RunningStates
 REDIS_TMP_ENTRIES_TTL = 60 * 60 * 24 * 7  # 7 day
 
 
-def get_available_apps() -> List:
-    # TODO: remove this
-    print("!!!!!!!!!!!!!!!!!!!!! TODO remove this function", flush=True)
-    inventory = []
-    for pk in DeployedApp.all_pks():
-        app = DeployedApp.find(DeployedApp.pk == pk).first()
-        inventory.append(
-            {
-                "inventory": app.inventory,
-                "deployment_id": app.deployment_id,
-                "deployment_secret": app.deployment_secret,
-            }
-        )
-    return inventory
-
-
 def set_available_apps(inventory: List):
     """
     Example of inventory:
@@ -152,15 +136,6 @@ def set_job_status(job_id: str, output: str, status: str) -> None:
     running_deploy.status = RunningStates[status.upper()]
     running_deploy.expire(REDIS_TMP_ENTRIES_TTL)
     running_deploy.save()
-
-
-def get_nb_running_jobs() -> int:
-    return len(
-        RunningAppDeployment.find(
-            RunningAppDeployment.status == RunningStates.RUNNING
-            or RunningAppDeployment.status == RunningStates.STARTING
-        ).all()
-    )
 
 
 def get_load_report(query: dict[str, int]) -> dict:
