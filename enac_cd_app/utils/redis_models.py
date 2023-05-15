@@ -32,4 +32,5 @@ class RunningAppDeployment(JsonModel):
     inventory: str = Field(index=True)
     status: RunningStates = Field(index=True)
     started_at: datetime.datetime
+    container_id: str
     output: str

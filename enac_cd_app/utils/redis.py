@@ -15,6 +15,7 @@ REDIS_TMP_ENTRIES_TTL = 60 * 60 * 24 * 7  # 7 day
 
 def get_available_apps() -> List:
     # TODO: remove this
+    print("!!!!!!!!!!!!!!!!!!!!! TODO remove this function", flush=True)
     inventory = []
     for pk in DeployedApp.all_pks():
         app = DeployedApp.find(DeployedApp.pk == pk).first()
@@ -97,6 +98,7 @@ def set_deploy_starting(inventory: str) -> int:
             status=RunningStates.STARTING,
             started_at=datetime.datetime.now(),
             output="",
+            container_id="",
         )
         running_app_deployment.expire(REDIS_TMP_ENTRIES_TTL)
         running_app_deployment.save()
@@ -107,7 +109,7 @@ def set_deploy_starting(inventory: str) -> int:
     }
 
 
-def get_running_app_deployment(inventory: str, job_id: str) -> str:
+def get_running_app_deployment(inventory: str, job_id: str) -> RunningAppDeployment:
     """
     Return RunningAppDeployment matching inventory and job_id
     """
@@ -122,7 +124,21 @@ def get_running_app_deployment(inventory: str, job_id: str) -> str:
     return deployment
 
 
-def set_job_status(job_id: str, status: str, output: str):
+def set_container_id(job_id: str, container_id=str) -> None:
+    """
+    Set the container_id of a job
+    """
+    try:
+        running_deploy = RunningAppDeployment.find(
+            RunningAppDeployment.pk == job_id
+        ).first()
+    except NotFoundError:
+        raise Exception("App deployment not found")
+    running_deploy.container_id = container_id
+    running_deploy.save()
+
+
+def set_job_status(job_id: str, output: str, status: str) -> None:
     """
     Set the status of a job
     """
@@ -132,16 +148,8 @@ def set_job_status(job_id: str, status: str, output: str):
         ).first()
     except NotFoundError:
         raise Exception("App deployment not found")
-    if running_deploy.pk != job_id:
-        raise Exception("App deployment not found")
-    if status.upper() == "FINISHED":
-        if output.lower().rstrip().endswith("process return code: 0"):
-            running_deploy.status = RunningStates.SUCCESS
-        else:
-            running_deploy.status = RunningStates.ERROR
-    else:
-        running_deploy.status = RunningStates[status.upper()]
-    running_deploy.output += output
+    running_deploy.output = output
+    running_deploy.status = RunningStates[status.upper()]
     running_deploy.expire(REDIS_TMP_ENTRIES_TTL)
     running_deploy.save()
 
