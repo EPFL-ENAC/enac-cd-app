@@ -213,12 +213,19 @@ async def get_inject_apps(background_tasks: BackgroundTasks):
 
 
 @app.get("/load/", dependencies=[Depends(check_ip_for_monitoring)])
-async def get_load():
+async def get_load(periods: str = "1_hour:3600,1_day:86400,1_week:604800"):
     """
-    Return Redis activity load
+    Return Redis activity load for the time periods requested
+    periods="1_hour:3600,1_day:86400,1_week:604800"
     """
     try:
-        load_report = redis.get_load_report()
+        query: dict[str, int] = {
+            period_name: int(period_seconds)
+            for period_name, period_seconds in [
+                period.split(":") for period in periods.split(",")
+            ]
+        }
+        load_report = redis.get_load_report(query)
         return {"status": "ok", "load": load_report}
     except Exception as e:
         return {"status": "error", "error": str(e)}

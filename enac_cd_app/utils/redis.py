@@ -155,17 +155,17 @@ def get_nb_running_jobs() -> int:
     )
 
 
-def get_load_report() -> dict:
+def get_load_report(query: dict[str, int]) -> dict:
     """
     Return a dict with the health of the app
-    for last hour, last day, last week:
-      nb of jobs with starting, running, success, error
+    for requested periods
+        query = {'1_hour': 3600, '1_day': 86400, '1_week': 604800}
+        nb of jobs with starting, running, success, error
     """
     now = datetime.datetime.now()
     periods = {
-        "1 hour": now - datetime.timedelta(hours=1),
-        "1 day": now - datetime.timedelta(days=1),
-        "1 week": now - datetime.timedelta(days=7),
+        name: now - datetime.timedelta(seconds=seconds)
+        for name, seconds in query.items()
     }
     load_report = {
         period: {status: 0 for status in ["starting", "running", "success", "error"]}
