@@ -20,5 +20,11 @@ COPY --from=poetry-stage /app/requirements.txt /app
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./enac_cd_app /app/enac_cd_app
+COPY ./log_conf.yml /app/
 
-CMD [ "uvicorn", "enac_cd_app.main:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers", "--forwarded-allow-ips", "*" ]
+CMD [ "uvicorn", "enac_cd_app.main:app", \
+    "--host", "0.0.0.0", \
+    "--port", "80", \
+    "--proxy-headers", "--forwarded-allow-ips", "*", \
+    "--log-config", "log_conf.yml" \
+]
