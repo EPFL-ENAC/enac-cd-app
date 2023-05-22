@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 
@@ -10,6 +11,9 @@ CD_ENV = os.environ.get("CD_ENV")
 GH_USERNAME = os.environ.get("GH_USERNAME")
 GH_PAT = os.environ.get("GH_PAT")
 SELF_CONTAINER_CHECK_INTERVAL = 5  # seconds
+
+logger_access = logging.getLogger("uvicorn.access")
+logger_error = logging.getLogger("uvicorn.error")
 
 
 def inject_apps(job_id: str = None) -> None:
@@ -42,9 +46,8 @@ def inject_apps(job_id: str = None) -> None:
         if job_id is not None:
             my_redis.set_job_status(job_id=job_id, status="success", output=output)
     except Exception as e:
-        print(
-            f"Error while running enacit-ansible announce-apps: {str(e)}",
-            flush=True,
+        logger_error.error(
+            f"Error while running enacit-ansible announce-apps: {str(e)}"
         )
         if job_id is not None:
             my_redis.set_job_status(job_id=job_id, status="error", output=str(e))
@@ -79,7 +82,7 @@ def app_deploy(inventory: str, job_id: str, background_tasks: BackgroundTasks) -
             pid_mode="host",
         )
         my_redis.set_container_id(container_id=container.id, job_id=job_id)
-        print(f"{job_id=} Launched app-deploy in container {container}", flush=True)
+        logger_access.info(f"{job_id=} Launched app-deploy in container {container}")
         check_container(
             container_id=container.id,
             job_id=job_id,
@@ -87,9 +90,8 @@ def app_deploy(inventory: str, job_id: str, background_tasks: BackgroundTasks) -
             background_tasks=background_tasks,
         )
     except Exception as e:
-        print(
-            f"Error while running enacit-ansible announce-apps: {str(e)}",
-            flush=True,
+        logger_error.error(
+            f"Error while running enacit-ansible announce-apps: {str(e)}"
         )
 
 

@@ -3,6 +3,7 @@ This is to define all interactions with redis
 """
 
 import datetime
+import logging
 from typing import List
 
 from redis_om import Migrator
@@ -11,6 +12,7 @@ from redis_om.model.model import NotFoundError
 from .my_redis_models import DeployedApp, RunningAppDeployment, RunningStates
 
 REDIS_TMP_ENTRIES_TTL = 60 * 60 * 24 * 7  # 7 day
+logger_access = logging.getLogger("uvicorn.access")
 
 
 def set_available_apps(inventory: List):
@@ -133,7 +135,7 @@ def set_job_status(job_id: str, output: str, status: str) -> None:
     except NotFoundError:
         raise Exception("App deployment not found")
     if running_deploy.status != RunningStates[status.upper()]:
-        print(f"{job_id=} Changed to {status=}", flush=True)
+        logger_access.info(f"{job_id=} Changed to {status=}")
     running_deploy.output = output
     running_deploy.status = RunningStates[status.upper()]
     running_deploy.expire(REDIS_TMP_ENTRIES_TTL)

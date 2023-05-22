@@ -131,7 +131,7 @@ async def get_load(periods: str = "1_hour:3600,1_day:86400,1_week:604800"):
 
 
 def init():
-    time.sleep(2)  # be sure FastAPI is ready
+    time.sleep(1)  # be sure FastAPI is ready
     my_docker.inject_apps()
 
 
