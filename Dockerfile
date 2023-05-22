@@ -21,4 +21,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./enac_cd_app /app/enac_cd_app
 
-CMD [ "uvicorn", "enac_cd_app.main:app", "--host", "0.0.0.0", "--port", "80" ]
+CMD [ "uvicorn", "enac_cd_app.main:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers", "--forwarded-allow-ips", "*" ]
