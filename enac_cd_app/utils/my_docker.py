@@ -46,9 +46,7 @@ def inject_apps(job_id: str = None) -> None:
         if job_id is not None:
             my_redis.set_job_status(job_id=job_id, status="success", output=output)
     except Exception as e:
-        logger_error.error(
-            f"Error while running enacit-ansible announce-apps: {str(e)}"
-        )
+        logger_error.error(f"Error while running enacit-ansible announce-apps: {e}")
         if job_id is not None:
             my_redis.set_job_status(job_id=job_id, status="error", output=str(e))
 
@@ -90,9 +88,7 @@ def app_deploy(inventory: str, job_id: str, background_tasks: BackgroundTasks) -
             background_tasks=background_tasks,
         )
     except Exception as e:
-        logger_error.error(
-            f"Error while running enacit-ansible announce-apps: {str(e)}"
-        )
+        logger_error.error(f"Error while running enacit-ansible announce-apps: {e}")
 
 
 def check_container(

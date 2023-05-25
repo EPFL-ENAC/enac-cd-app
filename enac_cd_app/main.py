@@ -1,3 +1,4 @@
+import logging
 import time
 from multiprocessing import Process
 from typing import Dict, List
@@ -12,6 +13,9 @@ app = FastAPI(
     title=__name__,
     version=__version__,
 )
+
+logger_access = logging.getLogger("uvicorn.access")
+logger_error = logging.getLogger("uvicorn.error")
 
 
 @app.get("/")
@@ -106,8 +110,20 @@ async def post_set_available_apps(inventory: List[Dict]):
     """
     try:
         my_redis.set_available_apps(inventory=inventory)
+        logger_access.info(
+            "Available deployment_id are set to:\n"
+            + (
+                "\n".join(
+                    [
+                        f"- {app_inventory['deployment_id']}"
+                        for app_inventory in inventory
+                    ]
+                )
+            )
+        )
         return {"status": "ok"}
     except Exception as e:
+        logger_error.error(f"Available apps set failed: {e}")
         return {"status": "error", "error": str(e)}
 
 
