@@ -51,44 +51,46 @@ def inject_apps(job_id: str = None) -> None:
             my_redis.set_job_status(job_id=job_id, status="error", output=str(e))
 
 
-def app_deploy(inventory: str, job_id: str, background_tasks: BackgroundTasks) -> None:
+def app_deploy(
+    deployment_id: str, inventory: str, job_id: str, background_tasks: BackgroundTasks
+) -> None:
     """
     Run enacit-ansible app-deploy in a docker container
     """
-    try:
-        client = docker.from_env()
-        client.login(username=GH_USERNAME, password=GH_PAT, registry="ghcr.io")
-        client.images.pull("ghcr.io/epfl-enac/enacit-ansible", tag="latest")
-        container = client.containers.run(
-            "ghcr.io/epfl-enac/enacit-ansible:latest",
-            f"app-deploy {inventory} {job_id}",
-            volumes={
-                "/opt/enac-cd-app/root/.ssh": {
-                    "bind": "/opt/root/.ssh",
-                    "mode": "ro",
-                },
-                "/opt/enac-cd-app/root/.enacit-ansible_vault_password": {
-                    "bind": "/root/.enacit-ansible_vault_password",
-                    "mode": "rw",
-                },
+    client = docker.from_env()
+    client.login(username=GH_USERNAME, password=GH_PAT, registry="ghcr.io")
+    client.images.pull("ghcr.io/epfl-enac/enacit-ansible", tag="latest")
+    container = client.containers.run(
+        "ghcr.io/epfl-enac/enacit-ansible:latest",
+        f"app-deploy {inventory} {job_id}",
+        volumes={
+            "/opt/enac-cd-app/root/.ssh": {
+                "bind": "/opt/root/.ssh",
+                "mode": "ro",
             },
-            environment={
-                "CD_ENV": CD_ENV,
+            "/opt/enac-cd-app/root/.enacit-ansible_vault_password": {
+                "bind": "/root/.enacit-ansible_vault_password",
+                "mode": "rw",
             },
-            network="enac-cd-app_default",
-            detach=True,
-            pid_mode="host",
-        )
-        my_redis.set_container_id(container_id=container.id, job_id=job_id)
-        logger_access.info(f"{job_id=} Launched app-deploy in container {container}")
-        check_container(
-            container_id=container.id,
-            job_id=job_id,
-            periodic_check=True,
-            background_tasks=background_tasks,
-        )
-    except Exception as e:
-        logger_error.error(f"Error while running enacit-ansible announce-apps: {e}")
+        },
+        environment={
+            "CD_ENV": CD_ENV,
+        },
+        network="enac-cd-app_default",
+        detach=True,
+        pid_mode="host",
+    )
+    my_redis.set_container_id(container_id=container.id, job_id=job_id)
+    logger_access.info(
+        f"{job_id=} Launched app-deploy of {deployment_id} "
+        f"in container {container.short_id}"
+    )
+    check_container(
+        container_id=container.id,
+        job_id=job_id,
+        periodic_check=True,
+        background_tasks=background_tasks,
+    )
 
 
 def check_container(

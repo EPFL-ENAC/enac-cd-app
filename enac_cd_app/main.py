@@ -46,10 +46,12 @@ async def post_app_deploy(payload: dict, background_tasks: BackgroundTasks):
                     my_docker.inject_apps, deployment["running_app_deployment"].pk
                 )
             else:
+                job_id = deployment["running_app_deployment"].pk
                 background_tasks.add_task(
                     my_docker.app_deploy,
+                    deployment_id,
                     inventory,
-                    deployment["running_app_deployment"].pk,
+                    job_id,
                     background_tasks,
                 )
 
@@ -61,6 +63,7 @@ async def post_app_deploy(payload: dict, background_tasks: BackgroundTasks):
             "output": deployment["running_app_deployment"].output,
         }
     except Exception as e:
+        logger_error.error(f"Error while running app-deploy: {e}")
         return {"status": "error", "error": str(e)}
 
 
