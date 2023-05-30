@@ -16,6 +16,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - ./traefik.yml:/configuration/traefik.yml
       - ${SSL_CERT_CRT:-./cert/certificate.crt}:/cert/certificate.crt
@@ -32,6 +33,7 @@ services:
     environment:
       - REDIS_OM_URL=redis://default:${REDIS_PASSWORD}@redis:6379
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - .env
@@ -43,6 +45,7 @@ services:
     environment:
       - REDIS_ARGS=--requirepass ${REDIS_PASSWORD}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - redis-data:/data
     # ports:
     #   - 6379:6379
