@@ -36,6 +36,10 @@ def inject_apps(job_id: str = None) -> None:
                     "bind": "/root/.enacit-ansible_vault_password",
                     "mode": "rw",
                 },
+                "/etc/localtime": {
+                    "bind": "/etc/localtime",
+                    "mode": "ro",
+                },
             },
             environment={
                 "CD_ENV": CD_ENV,
@@ -74,6 +78,10 @@ def app_deploy(
                 "/opt/enac-cd-app/root/.enacit-ansible_vault_password": {
                     "bind": "/root/.enacit-ansible_vault_password",
                     "mode": "rw",
+                },
+                "/etc/localtime": {
+                    "bind": "/etc/localtime",
+                    "mode": "ro",
                 },
             },
             environment={
