@@ -25,19 +25,23 @@ sequenceDiagram
     CD->>GHR: ok, job_id is "jobid-123", status is "starting"
 
     Note over enacit-ansible: Phase 2: Processing of the app-deploy
-    enacit-ansible->>CD: set status for job_id="jobid-123" to "running" with output
-    CD->>R-Running: set status for job_id="jobid-123" to "running" with output
-    enacit-ansible->>enacit-ansible: do the ansible app deployment
+    CD->>enacit-ansible: read periodicaly app-deploy progress
+    enacit-ansible->>CD: return status and output
+    CD->>R-Running: save status and output
 
     Note over GHR: Any time the status may be requested
     GHR->>CD: /job-status/ deployment_id=myapp1 deployment_secret=secret1 job_id=jobid-123
     CD->>R-Running: get status for job_id="jobid-123"
-    R-Running->>CD: status is "running" with output
-    CD->>GHR: status is "running" with output
+    R-Running->>CD: status is "starting" or "running"
+    CD->>enacit-ansible: read app-deploy progress
+    enacit-ansible->>CD: return status and output
+    CD->>R-Running: save status and output
+    CD->>GHR: answer current status and output
 
     Note over enacit-ansible: Phase 3: app-deploy is finished
-    enacit-ansible->>CD: set status for job_id="jobid-123" to "finished" with output
-    CD->>R-Running: set status for job_id="jobid-123" to "finished" with output
+    CD->>enacit-ansible: read periodicaly app-deploy progress
+    enacit-ansible->>CD: return status is "finished" and output
+    CD->>R-Running: save status is "finished" and output
 
     Note over GHR: Phase 4: Last time the status is requested
     GHR->>CD: /job-status/ deployment_id=myapp1 deployment_secret=secret1 job_id=jobid-123
