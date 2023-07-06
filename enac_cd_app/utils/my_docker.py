@@ -12,6 +12,7 @@ CD_ENV = os.environ.get("CD_ENV")
 GH_USERNAME = os.environ.get("GH_USERNAME")
 GH_PAT = os.environ.get("GH_PAT")
 SELF_CONTAINER_CHECK_INTERVAL = 5  # seconds
+ENAC_CD_APP_ROOT = os.environ.get("ENAC_CD_APP_ROOT")
 
 logger_access = logging.getLogger("uvicorn.access")
 logger_error = logging.getLogger("uvicorn.error")
@@ -31,8 +32,8 @@ def inject_apps(job_id: str = None) -> None:
             "ghcr.io/epfl-enac/enacit-ansible:latest",
             "announce-apps",
             volumes={
-                "/opt/enac-cd-app/root/.ssh": {"bind": "/opt/root/.ssh", "mode": "ro"},
-                "/opt/enac-cd-app/root/.enacit-ansible_vault_password": {
+                f"{ENAC_CD_APP_ROOT}/.ssh": {"bind": "/opt/root/.ssh", "mode": "ro"},
+                f"{ENAC_CD_APP_ROOT}/.enacit-ansible_vault_password": {
                     "bind": "/root/.enacit-ansible_vault_password",
                     "mode": "rw",
                 },
@@ -71,11 +72,11 @@ def app_deploy(
             "ghcr.io/epfl-enac/enacit-ansible:latest",
             f"app-deploy {inventory} {job_id}",
             volumes={
-                "/opt/enac-cd-app/root/.ssh": {
+                f"{ENAC_CD_APP_ROOT}/.ssh": {
                     "bind": "/opt/root/.ssh",
                     "mode": "ro",
                 },
-                "/opt/enac-cd-app/root/.enacit-ansible_vault_password": {
+                f"{ENAC_CD_APP_ROOT}/.enacit-ansible_vault_password": {
                     "bind": "/root/.enacit-ansible_vault_password",
                     "mode": "rw",
                 },
