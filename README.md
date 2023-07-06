@@ -86,10 +86,24 @@ sequenceDiagram
 ```bash
 make generate-selfsigned-cert
 
-touch .env
-cat << EOF > .secret.env
-export REDIS_PASSWORD=secret
+cat << EOF > .env
+CD_ENV=test or prod
+MONITORING_IP=IP address authorized to monitor the app
+ENAC_CD_APP_ROOT=/_full_path_to_/enac-cd-app/root/
 EOF
+
+cat << EOF > .secret.env
+GH_USERNAME=GitHub username
+GH_PAT=<GitHub Personal Access Token>
+
+REDIS_PASSWORD=<secret>
+EOF
+
+touch root/.enacit-ansible_vault_password # to be filled
+
+# Add ssh key authorized to deploy apps
+touch root/.ssh/id_ed25519.pub # to be filled
+touch root/.ssh/id_ed25519 # to be filled
 
 make run
 ```
