@@ -4,10 +4,9 @@ RUN apk add --no-cache \
     gcc \
     curl \
     musl-dev
-RUN pip install poetry
-RUN pip install --user poetry-plugin-export
+RUN curl -sSL https://install.python-poetry.org | python3 -
 COPY ./pyproject.toml ./poetry.lock* /app/
-RUN poetry export --without-hashes --format=requirements.txt --output requirements.txt
+RUN /root/.local/bin/poetry export --without-hashes --format=requirements.txt --output requirements.txt
 
 
 FROM python:3.10-slim AS production-stage
@@ -28,4 +27,4 @@ CMD [ "uvicorn", "enac_cd_app.main:app", \
     "--port", "80", \
     "--proxy-headers", "--forwarded-allow-ips", "*", \
     "--log-config", "log_conf.yml" \
-    ]
+]
