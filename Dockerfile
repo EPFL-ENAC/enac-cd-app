@@ -1,4 +1,4 @@
-FROM python:3.13-alpine AS poetry-stage
+FROM python:3.10-alpine AS poetry-stage
 WORKDIR /app
 RUN apk add --no-cache \
     gcc \
@@ -10,7 +10,7 @@ COPY ./pyproject.toml ./poetry.lock* /app/
 RUN poetry export --without-hashes --format=requirements.txt --output requirements.txt
 
 
-FROM python:3.13-slim AS production-stage
+FROM python:3.10-slim AS production-stage
 EXPOSE 80
 WORKDIR /app
 RUN apt-get update && apt-get install -y \
