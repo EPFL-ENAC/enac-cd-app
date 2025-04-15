@@ -1,15 +1,16 @@
-FROM python:3.10-alpine as poetry-stage
+FROM python:3.13-alpine AS poetry-stage
 WORKDIR /app
 RUN apk add --no-cache \
     gcc \
     curl \
     musl-dev
-RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN pip install poetry
+RUN pip install --user poetry-plugin-export
 COPY ./pyproject.toml ./poetry.lock* /app/
-RUN /root/.local/bin/poetry export --without-hashes --format=requirements.txt --output requirements.txt
+RUN poetry export --without-hashes --format=requirements.txt --output requirements.txt
 
 
-FROM python:3.10-slim as production-stage
+FROM python:3.13-slim AS production-stage
 EXPOSE 80
 WORKDIR /app
 RUN apt-get update && apt-get install -y \
@@ -27,4 +28,4 @@ CMD [ "uvicorn", "enac_cd_app.main:app", \
     "--port", "80", \
     "--proxy-headers", "--forwarded-allow-ips", "*", \
     "--log-config", "log_conf.yml" \
-]
+    ]
