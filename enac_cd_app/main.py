@@ -8,6 +8,7 @@ from fastapi import BackgroundTasks, Depends, FastAPI
 from enac_cd_app import __name__, __version__
 from enac_cd_app.utils import my_docker, my_redis, my_redis_models
 from enac_cd_app.utils.ip import check_ip_for_monitoring, check_ip_is_local
+from enac_cd_app.docker_proc import init
 
 app = FastAPI(
     title=__name__,
@@ -147,11 +148,6 @@ async def get_load(periods: str = "1_hour:3600,1_day:86400,1_week:604800"):
         return {"status": "ok", "load": load_report}
     except Exception as e:
         return {"status": "error", "error": str(e)}
-
-
-def init():
-    time.sleep(1)  # be sure FastAPI is ready
-    my_docker.inject_apps()
 
 
 @app.on_event("startup")
