@@ -9,15 +9,13 @@ packages = [{include = "enac_cd_app"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-fastapi = "^0.95.0"
+fastapi = "^0.115"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
-redis-om = "^0.2.2"
+redis-om = "^0.3"
 docker = "^7.1.0"
-cryptography = "^44.0.2"
-starlette = "^0.27.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
+black = "^24"
 flake8 = "^6.0.0"
 pre-commit = "^3.2.1"
 
