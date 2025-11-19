@@ -1,14 +1,13 @@
 import logging
-import time
 from multiprocessing import Process
 from typing import Dict, List
 
 from fastapi import BackgroundTasks, Depends, FastAPI
 
 from enac_cd_app import __name__, __version__
+from enac_cd_app.docker_proc import init
 from enac_cd_app.utils import my_docker, my_redis, my_redis_models
 from enac_cd_app.utils.ip import check_ip_for_monitoring, check_ip_is_local
-from enac_cd_app.docker_proc import init
 
 app = FastAPI(
     title=__name__,
