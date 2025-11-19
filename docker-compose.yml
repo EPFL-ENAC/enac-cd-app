@@ -1,6 +1,6 @@
 services:
   reverse-proxy:
-    image: traefik:v3.0
+    image: traefik:v3.6
     restart: unless-stopped
     command:
       - "--providers.docker"
@@ -39,7 +39,7 @@ services:
       - .secret.env
 
   redis:
-    image: redis/redis-stack:latest
+    image: redis/redis-stack:7.2.0-v20
     restart: unless-stopped
     environment:
       - REDIS_ARGS=--requirepass ${REDIS_PASSWORD}
