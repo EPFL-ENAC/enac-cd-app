@@ -9,7 +9,9 @@ services:
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.web.http.redirections.entryPoint.permanent=true"
+      - "--entrypoints.web.forwardedHeaders.trustedIPs=10.95.132.6/28"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.forwardedHeaders.trustedIPs=10.95.132.6/28"
       - "--providers.docker.exposedByDefault=false"
     ports:
       - "80:80"
