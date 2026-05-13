@@ -112,9 +112,8 @@ async def post_set_available_apps(inventory: List[Dict]):
     Set the available apps from inventory to the database
     """
     try:
-        my_redis.set_available_apps(inventory=inventory)
         logger_access.info(
-            "Available deployment_id are set to:\n"
+            "Available deployment_id will be set to:\n"
             + (
                 "\n".join(
                     [
@@ -124,6 +123,7 @@ async def post_set_available_apps(inventory: List[Dict]):
                 )
             )
         )
+        my_redis.set_available_apps(inventory=inventory)
         return {"status": "ok"}
     except Exception as e:
         logger_error.error(f"Available apps set failed: {e}")
