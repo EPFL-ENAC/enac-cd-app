@@ -8,10 +8,10 @@ readme = "README.md"
 packages = [{include = "enac_cd_app"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.12"
 fastapi = "*"
-uvicorn = {extras = ["standard"], version = "^0.21.1"}
-redis-om = "^0.3"
+uvicorn = {extras = ["standard"], version = "^0.46.0"}
+redis-om = "^1.0"
 docker = "^7.1.0"
 starlette = ">=0.49"
 

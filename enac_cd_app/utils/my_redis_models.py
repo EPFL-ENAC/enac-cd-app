@@ -4,7 +4,7 @@ from enum import IntEnum
 from redis_om import Field, JsonModel
 
 
-class DeployedApp(JsonModel):
+class DeployedApp(JsonModel, index=True):
     """
     Define an app that can be deployed
     """
@@ -24,7 +24,7 @@ class RunningStates(IntEnum):
     ERROR = 4
 
 
-class RunningAppDeployment(JsonModel):
+class RunningAppDeployment(JsonModel, index=True):
     """
     Define a running app deployment
     """

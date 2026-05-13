@@ -2,6 +2,7 @@ import logging
 from multiprocessing import Process
 from typing import Dict, List
 
+from pydantic import ValidationError
 from fastapi import BackgroundTasks, Depends, FastAPI
 
 from enac_cd_app import __name__, __version__
@@ -63,7 +64,7 @@ async def post_app_deploy(payload: dict, background_tasks: BackgroundTasks):
             "output": deployment["running_app_deployment"].output,
         }
     except Exception as e:
-        logger_error.error(f"Error while running app-deploy: {e}")
+        logger_error.error(f"Error while running app-deploy: {e} ({type(e).__name__})")
         return {"status": "error", "error": str(e)}
 
 
@@ -125,8 +126,11 @@ async def post_set_available_apps(inventory: List[Dict]):
         )
         my_redis.set_available_apps(inventory=inventory)
         return {"status": "ok"}
+    except ValidationError as e:
+        logger_error.error(f"Available apps set failed: {e.errors()}")
+        return {"status": "error", "error": str(e)}
     except Exception as e:
-        logger_error.error(f"Available apps set failed: {e}")
+        logger_error.error(f"Available apps set failed: {e} ({type(e).__name__})")
         return {"status": "error", "error": str(e)}
 
 
