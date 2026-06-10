@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "enac-cd-app"
 version = "0.1.0"
+requires-poetry = ">=2.4.0"
 description = "CD app for ENAC-IT"
 authors = ["Samuel Bancal <Samuel.Bancal@epfl.ch>"]
 license = "GPLv3"
